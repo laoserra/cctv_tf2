@@ -45,14 +45,12 @@ def load_model(model_name):
 PATH_TO_LABELS = 'models/research/object_detection/data/mscoco_label_map.pbtxt' #CHECK!
 category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)
 
-print(models/research/object_detection/test_images) #CHECK!
-
 # path to test images
-PATH_TO_TEST_IMAGES_DIR = pathlib.Path('models/research/object_detection/test_images') #CHECK!
+PATH_TO_TEST_IMAGES_DIR = pathlib.Path('/shared-folder/input_folder') #CHECK!
 TEST_IMAGE_PATHS = sorted(list(PATH_TO_TEST_IMAGES_DIR.glob("*.jpg")))
 
 # path to save tested images and object counts
-PATH_TO_SAVE_IMAGES_DIR = pathlib.Path('output_folder') #CHECK!
+PATH_TO_SAVE_IMAGES_DIR = pathlib.Path('/shared-folder/output_folder') #CHECK!
 
 ################################################################################
 #                                  Detection
@@ -62,15 +60,6 @@ PATH_TO_SAVE_IMAGES_DIR = pathlib.Path('output_folder') #CHECK!
 # chose a model from models/research/object_detection/test_data/
 model_name = 'efficientdet_d1_coco17_tpu-32'
 detection_model = load_model(model_name)
-
-# Check the model's input signature, it expects a batch of 3-color images of type uint8
-print(detection_model.signatures['serving_default'].inputs) #CHECK!
-
-# Check the model's outputs
-detection_model.signatures['serving_default'].output_dtypes #CHECK!
-
-# Check the model's output shapes
-detection_model.signatures['serving_default'].output_shapes #CHECK!
 
 # Add a wrapper function to call the model, and cleanup the outputs
 def run_inference_for_single_image(model, image):
@@ -140,7 +129,7 @@ def show_inference(model, image_path):
   # Actual detection.
   output_dict = run_inference_for_single_image(model, image_np)
   # Visualization of the results of a detection.
-  threshold = 0.3 # set minimun score threshold
+  threshold = 0.5 # set minimun score threshold
   vis_util.visualize_boxes_and_labels_on_image_array(
       image_np,
       output_dict['detection_boxes'],
@@ -165,12 +154,7 @@ def show_inference(model, image_path):
       threshold)
   
   overall_detections.extend(detections)      
-  print(detections)
-
   
-# plt.figure(figsize=(24,32))
-# plt.imshow(Image.fromarray(image_np))
-# plt.show()
   # save images with bounding boxes
   im_save = Image.fromarray(image_np)
   image_name = os.path.basename(image_path)
@@ -186,7 +170,7 @@ for image_path in TEST_IMAGE_PATHS:
   end_time = time.time() #CHECK!
   elapsed.append(end_time - start_time) #CHECK!
   # move tested images from input folder
-  shutil.move(image_path, 'PUT/HERE/DIR/TO/MOVE/IMAGES')#no need to include the file name in destination  #CHECK!
+  shutil.move(image_path, '/shared-folder/archive_folder')#no need to include the file name in destination  #CHECK!
 
 mean_elapsed = sum(elapsed) / float(len(elapsed)) #CHECK!
 print('Elapsed time: ' + str(mean_elapsed) + ' second per image') #CHECK!
