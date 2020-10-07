@@ -39,11 +39,9 @@ def load_model(model_name):
     return model
   else:
     # exits the program
-    sys.exit('model not loaded')
+    sys.exit('model name incorrectly spelt or model not loaded')
 
-# Loading label map
-
-# List of the strings that is used to add correct label for each box.
+# Loading label map-List of the used strings to add correct label for each box.
 PATH_TO_LABELS = 'models/research/object_detection/data/mscoco_label_map.pbtxt' #CHECK!
 category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)
 
