@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # base imports
 import numpy as np
 import os
