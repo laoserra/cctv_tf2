@@ -52,7 +52,7 @@ PATH_TO_TEST_IMAGES_DIR = pathlib.Path('/shared-folder/input_folder') #CHECK!
 TEST_IMAGE_PATHS = sorted(list(PATH_TO_TEST_IMAGES_DIR.glob("*.jpg")))
 
 # path to save tested images and object counts
-PATH_TO_SAVE_IMAGES_DIR = pathlib.Path('/shared-folder/output_folder') #CHECK!
+PATH_TO_SAVE_IMAGES_DIR = '/shared-folder/output_folder' #CHECK!
 
 ################################################################################
 #                                  Detection
@@ -127,7 +127,8 @@ overall_detections = []
 def show_inference(model, image_path):
   # the array based representation of the image will be used later in order to prepare the
   # result image with boxes and labels on it.
-  image_np = np.array(Image.open(image_path))
+  image = Image.open(image_path)
+  image_np = np.array(image)
   # Actual detection.
   output_dict = run_inference_for_single_image(model, image_np)
   # Visualization of the results of a detection.
@@ -144,7 +145,6 @@ def show_inference(model, image_path):
       line_thickness=8)
   
   image_name = os.path.basename(image_path)
-  image = Image.open(image_path)
 
   detections = get_detections(
       image_name,
@@ -159,7 +159,6 @@ def show_inference(model, image_path):
   
   # save images with bounding boxes
   im_save = Image.fromarray(image_np)
-  image_name = os.path.basename(image_path)
   im_save.save(PATH_TO_SAVE_IMAGES_DIR + '/' + image_name) #add '_bb' for bounding boxes?
 
 
@@ -172,9 +171,11 @@ for image_path in TEST_IMAGE_PATHS:
   end_time = time.time() #CHECK!
   elapsed.append(end_time - start_time) #CHECK!
   # move tested images from input folder
-  shutil.move(image_path, '/shared-folder/archive_folder')#no need to include the file name in destination  #CHECK!
+  image_name = os.path.basename(image_path)
+  image_destination = PATH_TO_SAVE_IMAGES_DIR + '/' + image_name
+  shutil.move(image_path, image_destination)
 
-mean_elapsed = sum(elapsed) / float(len(elapsed)) #CHECK!
+mean_elapsed = sum(elapsed) / float(len(elapsed)) #CHECK: in one run I got the msg "float division by zero"!
 print('Elapsed time: ' + str(mean_elapsed) + ' second per image') #CHECK!
 
 
@@ -187,7 +188,6 @@ print('Elapsed time: ' + str(mean_elapsed) + ' second per image') #CHECK!
 df = pd.DataFrame(overall_detections)
 print('overall detections:') #CHECK!
 print(df.head()) #CHECK!
-df = df.iloc[:,1:]
 
 # group by image and type of object and perform counts
 objects_of_interest = ['bicycle', 'car', 'person', 'motorcycle', 'bus', 'truck']
