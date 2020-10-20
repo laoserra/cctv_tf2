@@ -9,7 +9,6 @@ import six.moves.urllib as urllib
 import sys
 import tarfile
 import tensorflow as tf
-print(tf.__version__)
 import time
 from datetime import datetime
 import pandas as pd
@@ -34,7 +33,7 @@ from object_detection.utils import visualization_utils as vis_util
 
 # Model loader
 def load_model(model_name):
-  directory = 'models/research/object_detection/test_data/' #CHECK!
+  directory = '/home/tensorflow/models/research/object_detection/test_data/'
   model_dir = directory + model_name + "/saved_model"
   if os.path.exists(model_dir):
     model = tf.saved_model.load(model_dir)
@@ -44,15 +43,17 @@ def load_model(model_name):
     sys.exit('model name incorrectly spelt or model not loaded')
 
 # Loading label map-List of the used strings to add correct label for each box.
-PATH_TO_LABELS = 'models/research/object_detection/data/mscoco_label_map.pbtxt' #CHECK!
+PATH_TO_LABELS = '/home/tensorflow/models/research/object_detection/data/mscoco_label_map.pbtxt'
 category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)
 
 # path to test images
-PATH_TO_TEST_IMAGES_DIR = pathlib.Path('/shared-folder/input_folder') #CHECK!
+PATH_TO_TEST_IMAGES_DIR = pathlib.Path('/shared-folder/input_folder')
 TEST_IMAGE_PATHS = sorted(list(PATH_TO_TEST_IMAGES_DIR.glob("*.jpg")))
 
 # path to save tested images and object counts
-PATH_TO_SAVE_IMAGES_DIR = '/shared-folder/output_folder' #CHECK!
+PATH_TO_SAVE_IMAGES_DIR = '/shared-folder/output_folder'
+
+PATH_TO_ARCHIVE = '/shared-folder/archive_folder'
 
 ################################################################################
 #                                  Detection
@@ -60,7 +61,7 @@ PATH_TO_SAVE_IMAGES_DIR = '/shared-folder/output_folder' #CHECK!
 
 # Load an object detection model
 # chose a model from models/research/object_detection/test_data/
-model_name = 'efficientdet_d1_coco17_tpu-32'
+model_name = 'faster_rcnn_inception_resnet_v2_640x640_coco17_tpu-8'
 detection_model = load_model(model_name)
 
 # Add a wrapper function to call the model, and cleanup the outputs
@@ -159,24 +160,27 @@ def show_inference(model, image_path):
   
   # save images with bounding boxes
   im_save = Image.fromarray(image_np)
-  im_save.save(PATH_TO_SAVE_IMAGES_DIR + '/' + image_name) #add '_bb' for bounding boxes?
+  image_base = os.path.splitext(image_name)[0]
+  image_ext= os.path.splitext(image_name)[1]
+  new_img_name = image_base + '_bbox' + image_ext
+  im_save.save(PATH_TO_SAVE_IMAGES_DIR + '/' + new_img_name)
 
 
 # Run inference for all images in TEST_IMAGE_PATHS directory and plot 
 # average time per image
-elapsed = [] #CHECK!
+elapsed = []
 for image_path in TEST_IMAGE_PATHS:
-  start_time = time.time() #CHECK!
+  start_time = time.time()
   show_inference(detection_model, image_path)
-  end_time = time.time() #CHECK!
-  elapsed.append(end_time - start_time) #CHECK!
+  end_time = time.time()
+  elapsed.append(end_time - start_time)
   # move tested images from input folder
   image_name = os.path.basename(image_path)
-  image_destination = PATH_TO_SAVE_IMAGES_DIR + '/' + image_name
+  image_destination = PATH_TO_ARCHIVE + '/' + image_name
   shutil.move(image_path, image_destination)
 
-mean_elapsed = sum(elapsed) / float(len(elapsed)) #CHECK: in one run I got the msg "float division by zero"!
-print('Elapsed time: ' + str(mean_elapsed) + ' second per image') #CHECK!
+mean_elapsed = sum(elapsed) / float(len(elapsed))
+print('Elapsed time: ' + str(mean_elapsed) + ' second per image')
 
 
 
@@ -186,8 +190,6 @@ print('Elapsed time: ' + str(mean_elapsed) + ' second per image') #CHECK!
 
 # Dataframe with image detections from pretrained model
 df = pd.DataFrame(overall_detections)
-print('overall detections:') #CHECK!
-print(df.head()) #CHECK!
 
 # group by image and type of object and perform counts
 objects_of_interest = ['bicycle', 'car', 'person', 'motorcycle', 'bus', 'truck']
